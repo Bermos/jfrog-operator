@@ -28,8 +28,8 @@ Helm or GitOps tools.
 | `platform.jfrog.bermos.io` | `User` | Namespaced | `/artifactory/api/security/users` | done |
 | `platform.jfrog.bermos.io` | `Group` | Namespaced | `/artifactory/api/security/groups` | done |
 | `platform.jfrog.bermos.io` | `PermissionTarget` | Namespaced | `/artifactory/api/v2/security/permissions` | done |
-| `xray.jfrog.bermos.io` | `Policy` | Namespaced | `/xray/api/v2/policies` | planned |
-| `xray.jfrog.bermos.io` | `Watch` | Namespaced | `/xray/api/v2/watches` | planned |
+| `xray.jfrog.bermos.io` | `Policy` | Namespaced | `/xray/api/v2/policies` | done |
+| `xray.jfrog.bermos.io` | `Watch` | Namespaced | `/xray/api/v2/watches` | done |
 
 All managed kinds are namespaced. Crossplane v2 composes namespaced
 resources into namespaced composites, and namespaces are the natural tenancy
@@ -114,6 +114,21 @@ and `Delete` against JFrog; the shared reconciler takes care of:
   `admin` and `edit` roles. The `jfrog-security-editor` ClusterRole has to be
   bound explicitly.
 
+### Xray policies and watches
+
+- A `Policy` has typed rules (name, priority) whose `criteria` and `actions`
+  are passed through with the field names of the Xray API, because they
+  differ per policy type and grow with every Xray release. Rules are compared
+  in priority order.
+- A `Watch` has typed resources, filters, assigned policies and recipients.
+  Assigned policies are compared sorted by name. Xray adds fields to watched
+  resources (e.g. `repo_type`); list elements are compared field by field,
+  so such additions are not drift.
+- Both are replaced as a whole on update, so rules or resources added by hand
+  are removed.
+- Like users and permissions, they act platform-wide and their RBAC is part
+  of `jfrog-security-editor`, not namespace `edit`.
+
 ### Status
 
 Every managed resource reports:
@@ -141,8 +156,10 @@ compositions:
   (`rbac.crossplane.io/aggregate-to-crossplane`), so Crossplane may compose
   the resources without extra RBAC.
 
-See `examples/crossplane` for a composition that gives a team a local, remote
-and virtual repository for a package type.
+See `examples/crossplane` for a composition that onboards a team: local,
+remote and virtual repositories, a group with a permission target, and an
+Xray watch. The test suite renders its template and validates the result
+against the CRDs.
 
 A Crossplane provider generated with Upjet from the JFrog Terraform providers
 is the alternative. We prefer a native operator because it avoids running
@@ -176,7 +193,7 @@ found error.
 
 1. Connections, generic reconciler and `Repository`.
 2. `User`, `Group` and `PermissionTarget`, with user passwords from Secrets.
-3. Xray `Policy` and `Watch`.
-4. Helm chart, published image and Crossplane examples covering a full team
+3. Xray `Policy` and `Watch`, and a Crossplane example covering a full team
    onboarding (repositories, group, permission target, Xray watch).
+4. Helm chart and a published image.
 5. End-to-end tests against a real Artifactory in CI, if a licence allows it.

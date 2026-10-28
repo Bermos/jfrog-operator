@@ -1,14 +1,14 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: teamrepositories
+  name: teams
 spec:
   compositeTypeRef:
     apiVersion: platform.example.org/v1alpha1
-    kind: TeamRepositories
+    kind: Team
   mode: Pipeline
   pipeline:
-    - step: render-repositories
+    - step: render
       functionRef:
         name: function-go-templating
       input:
@@ -18,7 +18,9 @@ spec:
         inline:
           template: |
             {{- $xr := .observed.composite.resource }}
-            {{- $prefix := printf "%s-%s" $xr.spec.team $xr.spec.packageType }}
+            {{- $team := $xr.spec.team }}
+            {{- $type := $xr.spec.packageType }}
+            {{- $prefix := printf "%s-%s" $team $type }}
             ---
             apiVersion: artifactory.jfrog.bermos.io/v1alpha1
             kind: Repository
@@ -28,9 +30,9 @@ spec:
                 gotemplating.fn.crossplane.io/composition-resource-name: local
             spec:
               rclass: local
-              packageType: {{ $xr.spec.packageType }}
-              description: Artifacts published by {{ $xr.spec.team }}
-              xrayIndex: {{ $xr.spec.xrayIndex }}
+              packageType: {{ $type }}
+              description: Artifacts published by {{ $team }}
+              xrayIndex: true
             ---
             apiVersion: artifactory.jfrog.bermos.io/v1alpha1
             kind: Repository
@@ -40,9 +42,9 @@ spec:
                 gotemplating.fn.crossplane.io/composition-resource-name: remote
             spec:
               rclass: remote
-              packageType: {{ $xr.spec.packageType }}
+              packageType: {{ $type }}
               url: {{ $xr.spec.upstreamURL }}
-              xrayIndex: {{ $xr.spec.xrayIndex }}
+              xrayIndex: true
             ---
             apiVersion: artifactory.jfrog.bermos.io/v1alpha1
             kind: Repository
@@ -52,20 +54,65 @@ spec:
                 gotemplating.fn.crossplane.io/composition-resource-name: virtual
             spec:
               rclass: virtual
-              packageType: {{ $xr.spec.packageType }}
+              packageType: {{ $type }}
               repositories:
                 - {{ $prefix }}-local
                 - {{ $prefix }}-remote
               defaultDeploymentRepo: {{ $prefix }}-local
+            ---
+            apiVersion: platform.jfrog.bermos.io/v1alpha1
+            kind: Group
+            metadata:
+              name: {{ $team }}-developers
+              annotations:
+                gotemplating.fn.crossplane.io/composition-resource-name: group
+            spec:
+              description: Developers of {{ $team }}
+            ---
+            apiVersion: platform.jfrog.bermos.io/v1alpha1
+            kind: PermissionTarget
+            metadata:
+              name: {{ $prefix }}
+              annotations:
+                gotemplating.fn.crossplane.io/composition-resource-name: permissions
+            spec:
+              repo:
+                repositories:
+                  - {{ $prefix }}-local
+                  - {{ $prefix }}-remote
+                actions:
+                  groups:
+                    {{ $team }}-developers: [read, write, annotate]
+            {{- if $xr.spec.xrayPolicies }}
+            ---
+            apiVersion: xray.jfrog.bermos.io/v1alpha1
+            kind: Watch
+            metadata:
+              name: {{ $prefix }}
+              annotations:
+                gotemplating.fn.crossplane.io/composition-resource-name: watch
+            spec:
+              description: Artifacts of {{ $team }}
+              resources:
+                - type: repository
+                  name: {{ $prefix }}-local
+                - type: repository
+                  name: {{ $prefix }}-remote
+              assignedPolicies:
+              {{- range $xr.spec.xrayPolicies }}
+                - name: {{ .name }}
+                  type: {{ .type }}
+              {{- end }}
+            {{- end }}
             {{- with (index .observed.resources "virtual") }}
             ---
             apiVersion: platform.example.org/v1alpha1
-            kind: TeamRepositories
+            kind: Team
             status:
               url: {{ .resource.status.url }}
             {{- end }}
-    # Marks composed Repositories ready from their Ready condition, so the
-    # TeamRepositories only becomes ready once all three exist in Artifactory.
+    # Marks composed resources ready from their Ready condition, so the Team
+    # only becomes ready once everything exists in JFrog.
     - step: automatically-detect-ready-composed-resources
       functionRef:
         name: function-auto-ready

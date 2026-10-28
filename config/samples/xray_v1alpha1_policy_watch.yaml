@@ -1,0 +1,68 @@
+apiVersion: xray.jfrog.bermos.io/v1alpha1
+kind: Policy
+metadata:
+  name: block-critical
+  namespace: team-a
+spec:
+  type: security
+  description: Fail builds and block downloads with critical vulnerabilities
+  rules:
+    - name: critical
+      priority: 1
+      criteria:
+        min_severity: critical
+      actions:
+        fail_build: true
+        block_download:
+          active: true
+          unscanned: false
+    - name: high
+      priority: 2
+      criteria:
+        cvss_range:
+          from: 7
+          to: 8.9
+      actions:
+        notify_watch_recipients: true
+---
+apiVersion: xray.jfrog.bermos.io/v1alpha1
+kind: Policy
+metadata:
+  name: no-gpl
+  namespace: team-a
+spec:
+  type: license
+  rules:
+    - name: banned
+      priority: 1
+      criteria:
+        banned_licenses: [GPL-3.0, AGPL-3.0]
+        allow_unknown: true
+      actions:
+        fail_build: true
+---
+apiVersion: xray.jfrog.bermos.io/v1alpha1
+kind: Watch
+metadata:
+  name: team-a
+  namespace: team-a
+spec:
+  description: Team A repositories and builds
+  resources:
+    - type: repository
+      name: team-a-maven-local
+      filters:
+        - type: regex
+          value: ".*\\.jar"
+    - type: all-builds
+      filters:
+        - type: ant-patterns
+          value:
+            IncludePatterns: ["team-a/**"]
+  assignedPolicies:
+    - name: block-critical
+      type: security
+    - name: no-gpl
+      type: license
+  watchRecipients:
+    - team-a@example.com

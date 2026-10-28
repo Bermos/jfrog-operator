@@ -10,9 +10,11 @@ import (
 
 	artifactoryv1alpha1 "github.com/Bermos/jfrog-operator/api/artifactory/v1alpha1"
 	platformv1alpha1 "github.com/Bermos/jfrog-operator/api/platform/v1alpha1"
+	xrayv1alpha1 "github.com/Bermos/jfrog-operator/api/xray/v1alpha1"
 	"github.com/Bermos/jfrog-operator/internal/connection"
 	"github.com/Bermos/jfrog-operator/internal/controller/artifactory"
 	"github.com/Bermos/jfrog-operator/internal/controller/platform"
+	"github.com/Bermos/jfrog-operator/internal/controller/xray"
 	"github.com/Bermos/jfrog-operator/internal/reconciler"
 )
 
@@ -64,7 +66,17 @@ func Setup(mgr ctrl.Manager, opts Options) error {
 	}); err != nil {
 		return err
 	}
-	return platform.SetupPermissionTarget(mgr, &reconciler.Reconciler[*platformv1alpha1.PermissionTarget]{
+	if err := platform.SetupPermissionTarget(mgr, &reconciler.Reconciler[*platformv1alpha1.PermissionTarget]{
+		Client: mgr.GetClient(), Resolver: resolver, Recorder: recorder, SyncInterval: opts.SyncInterval,
+	}); err != nil {
+		return err
+	}
+	if err := xray.SetupPolicy(mgr, &reconciler.Reconciler[*xrayv1alpha1.Policy]{
+		Client: mgr.GetClient(), Resolver: resolver, Recorder: recorder, SyncInterval: opts.SyncInterval,
+	}); err != nil {
+		return err
+	}
+	return xray.SetupWatch(mgr, &reconciler.Reconciler[*xrayv1alpha1.Watch]{
 		Client: mgr.GetClient(), Resolver: resolver, Recorder: recorder, SyncInterval: opts.SyncInterval,
 	})
 }

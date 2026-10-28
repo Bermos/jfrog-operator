@@ -1,9 +1,16 @@
 # jfrog-operator
 
 A Kubernetes operator that manages resources in a self-hosted JFrog Platform:
-Artifactory repositories, users, groups and permission targets today, with
-Xray policies and watches next. It is designed to be composed by
+Artifactory repositories, users, groups, permission targets, and Xray
+policies and watches. It is designed to be composed by
 [Crossplane](https://crossplane.io) but works on its own as well.
+
+| Kind | API group | Manages |
+|---|---|---|
+| `ClusterConnection`, `Connection` | `platform.jfrog.bermos.io` | URL and credentials of a platform |
+| `Repository` | `artifactory.jfrog.bermos.io` | local, remote, virtual and federated repositories |
+| `User`, `Group`, `PermissionTarget` | `platform.jfrog.bermos.io` | access |
+| `Policy`, `Watch` | `xray.jfrog.bermos.io` | Xray security, license and operational risk policies |
 
 See [docs/design.md](docs/design.md) for the design and roadmap.
 
@@ -59,7 +66,12 @@ team-a      team-a-maven-local   team-a-maven-local   local   maven   True    Tr
 ```
 
 More examples are in [config/samples](config/samples), and a Crossplane
-composition is in [examples/crossplane](examples/crossplane).
+composition that onboards a team (repositories, group, permissions, Xray
+watch) is in [examples/crossplane](examples/crossplane).
+
+Users, groups, permission targets and Xray resources act platform-wide, so
+their RBAC is not aggregated into namespace `edit`/`admin`; bind the
+`jfrog-security-editor` ClusterRole to whoever administers JFrog.
 
 ## Behaviour in short
 

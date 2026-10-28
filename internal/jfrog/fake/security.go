@@ -79,6 +79,9 @@ func (s *Server) getObject(w http.ResponseWriter, r *http.Request, collection st
 	for _, f := range secretFields[collection] {
 		delete(obj, f)
 	}
+	if collection == XrayWatches {
+		decorateWatch(obj)
+	}
 	writeJSON(w, http.StatusOK, obj)
 }
 
@@ -131,7 +134,9 @@ func (s *Server) updateObject(w http.ResponseWriter, r *http.Request, collection
 			existing[k] = v
 		}
 	} else {
-		obj["name"] = name
+		if collection == Permissions || collection == XrayPolicies {
+			obj["name"] = name
+		}
 		s.collection(collection)[name] = obj
 	}
 	w.WriteHeader(http.StatusOK)

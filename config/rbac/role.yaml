@@ -83,3 +83,30 @@ rules:
   - users/finalizers
   verbs:
   - update
+- apiGroups:
+  - xray.jfrog.bermos.io
+  resources:
+  - policies
+  - watches
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - xray.jfrog.bermos.io
+  resources:
+  - policies/finalizers
+  - watches/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - xray.jfrog.bermos.io
+  resources:
+  - policies/status
+  - watches/status
+  verbs:
+  - get
+  - patch
+  - update

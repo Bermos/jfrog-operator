@@ -11,7 +11,8 @@ import (
 // set in desired that differ in observed. Fields only present in observed are
 // ignored, because JFrog fills in defaults for everything left unset. Both
 // values are normalised through JSON first so that e.g. int and float64
-// compare equal. Nested objects are compared recursively, lists as a whole.
+// compare equal. Nested objects are compared recursively. Lists must have the
+// same length and order; their elements are compared recursively.
 func Diff(desired, observed any) ([]string, error) {
 	d, err := normalise(desired)
 	if err != nil {
@@ -40,6 +41,21 @@ func normalise(v any) (any, error) {
 }
 
 func diff(path string, desired, observed any, paths *[]string) {
+	if dl, ok := desired.([]any); ok {
+		ol, ok := observed.([]any)
+		if !ok || len(dl) != len(ol) {
+			if !isEmpty(desired) || !isEmpty(observed) {
+				*paths = append(*paths, path)
+			}
+			return
+		}
+		// Lists are compared element by element, so that objects in a list
+		// may also carry fields the platform added.
+		for i := range dl {
+			diff(fmt.Sprintf("%s[%d]", path, i), dl[i], ol[i], paths)
+		}
+		return
+	}
 	dm, ok := desired.(map[string]any)
 	if !ok {
 		if !reflect.DeepEqual(desired, observed) && (!isEmpty(desired) || !isEmpty(observed)) {
