@@ -140,6 +140,8 @@ func TestUserLifecycle(t *testing.T) {
 		return nil
 	})
 
+	// Deleting works after the Secret is gone, as when the namespace is deleted.
+	deleteObj(t, &secret)
 	deleteObj(t, u)
 	waitGone(t, u)
 	if jfrogs.Object(fake.Users, name) != nil {
