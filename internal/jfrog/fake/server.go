@@ -24,6 +24,7 @@ type Request struct {
 type Server struct {
 	*httptest.Server
 
+	handler      http.Handler
 	mu           sync.Mutex
 	repositories map[string]map[string]any
 	// objects holds users, groups and permission targets by collection and name.
@@ -35,6 +36,14 @@ type Server struct {
 
 // NewServer starts a fake JFrog Platform. Close it when done.
 func NewServer() *Server {
+	s := New()
+	s.Server = httptest.NewServer(s.handler)
+	return s
+}
+
+// New returns a fake JFrog Platform that is not listening. Serve its
+// Handler, e.g. to run the fake as a standalone server.
+func New() *Server {
 	s := &Server{
 		repositories: map[string]map[string]any{},
 		objects:      map[string]map[string]map[string]any{},
@@ -54,9 +63,12 @@ func NewServer() *Server {
 	mux.HandleFunc("DELETE /artifactory/api/repositories/{key}", s.deleteRepository)
 	s.registerSecurity(mux)
 	s.registerXray(mux)
-	s.Server = httptest.NewServer(s.middleware(mux))
+	s.handler = s.middleware(mux)
 	return s
 }
+
+// Handler returns the HTTP handler of the fake platform.
+func (s *Server) Handler() http.Handler { return s.handler }
 
 func (s *Server) middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -130,7 +142,7 @@ func (s *Server) DeleteRepositoryDirect(key string) {
 	delete(s.repositories, key)
 }
 
-func (s *Server) listRepositories(w http.ResponseWriter, _ *http.Request) {
+func (s *Server) listRepositories(w http.ResponseWriter, r *http.Request) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	out := []map[string]any{}
@@ -139,7 +151,7 @@ func (s *Server) listRepositories(w http.ResponseWriter, _ *http.Request) {
 			"key":         key,
 			"type":        strings.ToUpper(repo["rclass"].(string)),
 			"packageType": repo["packageType"],
-			"url":         s.URL + "/artifactory/" + key,
+			"url":         "http://" + r.Host + "/artifactory/" + key,
 		})
 	}
 	writeJSON(w, http.StatusOK, out)

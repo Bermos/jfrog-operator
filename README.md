@@ -16,10 +16,14 @@ See [docs/design.md](docs/design.md) for the design and roadmap.
 
 ## Quick start
 
+Install with Helm (from a checkout, or from `oci://ghcr.io/bermos/charts/jfrog-operator` once a release is tagged):
+
 ```sh
-make install                     # install the CRDs
-make deploy IMG=<your image>     # or: make run, to run locally against your kubeconfig
+helm install jfrog-operator charts/jfrog-operator -n jfrog-system --create-namespace
 ```
+
+Or with kustomize: `make install deploy IMG=<your image>`, or `make run` to run
+the operator locally against your kubeconfig.
 
 Point the operator at your platform with an access token:
 
@@ -90,6 +94,9 @@ their RBAC is not aggregated into namespace `edit`/`admin`; bind the
 make generate   # regenerate deepcopy code, CRDs and RBAC after changing api/
 make lint
 make test       # unit tests and envtest integration tests against a fake JFrog
+make e2e        # installs the Helm chart into kind next to a fake JFrog (needs docker)
 ```
+
+Pushing a tag such as `v0.1.0` publishes the image and the Helm chart to GHCR.
 
 `make test` downloads a Kubernetes API server and etcd for envtest into `bin/`.

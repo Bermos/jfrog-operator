@@ -186,8 +186,12 @@ found error.
   correction, recreation after out-of-band deletion, deletion and orphaning,
   adoption, observe-only mode, secret rotation, error reporting, CEL validation
   and that the samples match the CRD schemas.
+- An end-to-end test builds the images, installs the Helm chart into a kind
+  cluster next to a containerised fake platform, and checks that one resource
+  of every kind becomes Ready and is cleaned up again.
 - CI runs lint, the full test suite with the race detector, a check that
-  generated code and manifests are up to date, and an image build.
+  generated code, manifests and the chart's CRDs are up to date, Helm lint,
+  the end-to-end test, and an image build.
 
 ## Roadmap
 
@@ -195,5 +199,6 @@ found error.
 2. `User`, `Group` and `PermissionTarget`, with user passwords from Secrets.
 3. Xray `Policy` and `Watch`, and a Crossplane example covering a full team
    onboarding (repositories, group, permission target, Xray watch).
-4. Helm chart and a published image.
+4. Helm chart, end-to-end test in kind, and a release workflow publishing the
+   image and chart on tags.
 5. End-to-end tests against a real Artifactory in CI, if a licence allows it.

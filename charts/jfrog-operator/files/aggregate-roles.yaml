@@ -1,0 +1,49 @@
+# Lets namespace admins and editors manage JFrog resources in their
+# namespaces, and viewers read them. Crossplane's own service account also
+# needs these permissions to compose the resources; see examples/crossplane.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: jfrog-editor
+  labels:
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+    rbac.crossplane.io/aggregate-to-crossplane: "true"
+rules:
+  - apiGroups: ["artifactory.jfrog.bermos.io"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["platform.jfrog.bermos.io"]
+    resources: ["connections"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: jfrog-viewer
+  labels:
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+rules:
+  - apiGroups: ["artifactory.jfrog.bermos.io", "platform.jfrog.bermos.io", "xray.jfrog.bermos.io"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+---
+# Users, groups and permission targets grant access to the whole platform
+# (a User can be made an admin), and Xray policies and watches can block
+# downloads and builds platform-wide, so they are deliberately not aggregated
+# into the namespace admin and edit roles. Bind this role explicitly to the
+# people or tools that administer JFrog. Crossplane gets it so compositions
+# can manage access and security.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: jfrog-security-editor
+  labels:
+    rbac.crossplane.io/aggregate-to-crossplane: "true"
+rules:
+  - apiGroups: ["platform.jfrog.bermos.io"]
+    resources: ["users", "groups", "permissiontargets"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["xray.jfrog.bermos.io"]
+    resources: ["policies", "watches"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]

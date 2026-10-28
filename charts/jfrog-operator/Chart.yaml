@@ -1,0 +1,10 @@
+apiVersion: v2
+name: jfrog-operator
+description: Manage repositories, users, groups, permissions and Xray policies of a self-hosted JFrog Platform from Kubernetes.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+home: https://github.com/Bermos/jfrog-operator
+sources:
+  - https://github.com/Bermos/jfrog-operator
+keywords: [jfrog, artifactory, xray, crossplane, operator]

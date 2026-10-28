@@ -1,0 +1,72 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "jfrog-operator.fullname" . }}-manager
+  labels:
+    {{- include "jfrog-operator.labels" . | nindent 4 }}
+# Generated from config/rbac/role.yaml by `make generate`.
+rules:
+  {{- (.Files.Get "files/manager-role.yaml" | fromYaml).rules | toYaml | nindent 2 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "jfrog-operator.fullname" . }}-manager
+  labels:
+    {{- include "jfrog-operator.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "jfrog-operator.fullname" . }}-manager
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "jfrog-operator.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "jfrog-operator.fullname" . }}-leader-election
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "jfrog-operator.labels" . | nindent 4 }}
+rules:
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "jfrog-operator.fullname" . }}-leader-election
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "jfrog-operator.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "jfrog-operator.fullname" . }}-leader-election
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "jfrog-operator.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+{{- if .Values.rbac.aggregateRoles }}
+{{- range $doc := splitList "\n---\n" (.Files.Get "files/aggregate-roles.yaml") }}
+{{- $role := fromYaml $doc }}
+{{- if $role }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ $role.metadata.name }}
+  labels:
+    {{- include "jfrog-operator.labels" $ | nindent 4 }}
+    {{- toYaml $role.metadata.labels | nindent 4 }}
+rules:
+  {{- toYaml $role.rules | nindent 2 }}
+{{- end }}
+{{- end }}
+{{- end }}
