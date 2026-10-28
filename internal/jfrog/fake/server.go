@@ -26,7 +26,9 @@ type Server struct {
 
 	mu           sync.Mutex
 	repositories map[string]map[string]any
-	requests     []Request
+	// objects holds users, groups and permission targets by collection and name.
+	objects  map[string]map[string]map[string]any
+	requests []Request
 	// failures maps "METHOD path" to a status code to return instead of handling the request.
 	failures map[string]int
 }
@@ -35,6 +37,7 @@ type Server struct {
 func NewServer() *Server {
 	s := &Server{
 		repositories: map[string]map[string]any{},
+		objects:      map[string]map[string]map[string]any{},
 		failures:     map[string]int{},
 	}
 	mux := http.NewServeMux()
@@ -49,6 +52,7 @@ func NewServer() *Server {
 	mux.HandleFunc("PUT /artifactory/api/repositories/{key}", s.createRepository)
 	mux.HandleFunc("POST /artifactory/api/repositories/{key}", s.updateRepository)
 	mux.HandleFunc("DELETE /artifactory/api/repositories/{key}", s.deleteRepository)
+	s.registerSecurity(mux)
 	s.Server = httptest.NewServer(s.middleware(mux))
 	return s
 }

@@ -9,6 +9,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	artifactoryv1alpha1 "github.com/Bermos/jfrog-operator/api/artifactory/v1alpha1"
+	platformv1alpha1 "github.com/Bermos/jfrog-operator/api/platform/v1alpha1"
 	"github.com/Bermos/jfrog-operator/internal/connection"
 	"github.com/Bermos/jfrog-operator/internal/controller/artifactory"
 	"github.com/Bermos/jfrog-operator/internal/controller/platform"
@@ -48,10 +49,22 @@ func Setup(mgr ctrl.Manager, opts Options) error {
 	}).SetupWithManager(mgr); err != nil {
 		return err
 	}
-	return artifactory.SetupRepository(mgr, &reconciler.Reconciler[*artifactoryv1alpha1.Repository]{
-		Client:       mgr.GetClient(),
-		Resolver:     resolver,
-		Recorder:     recorder,
-		SyncInterval: opts.SyncInterval,
+	if err := artifactory.SetupRepository(mgr, &reconciler.Reconciler[*artifactoryv1alpha1.Repository]{
+		Client: mgr.GetClient(), Resolver: resolver, Recorder: recorder, SyncInterval: opts.SyncInterval,
+	}); err != nil {
+		return err
+	}
+	if err := platform.SetupUser(mgr, &reconciler.Reconciler[*platformv1alpha1.User]{
+		Client: mgr.GetClient(), Resolver: resolver, Recorder: recorder, SyncInterval: opts.SyncInterval,
+	}); err != nil {
+		return err
+	}
+	if err := platform.SetupGroup(mgr, &reconciler.Reconciler[*platformv1alpha1.Group]{
+		Client: mgr.GetClient(), Resolver: resolver, Recorder: recorder, SyncInterval: opts.SyncInterval,
+	}); err != nil {
+		return err
+	}
+	return platform.SetupPermissionTarget(mgr, &reconciler.Reconciler[*platformv1alpha1.PermissionTarget]{
+		Client: mgr.GetClient(), Resolver: resolver, Recorder: recorder, SyncInterval: opts.SyncInterval,
 	})
 }

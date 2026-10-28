@@ -25,9 +25,9 @@ Helm or GitOps tools.
 | `platform.jfrog.bermos.io` | `ClusterConnection` | Cluster | n/a | done |
 | `platform.jfrog.bermos.io` | `Connection` | Namespaced | n/a | done |
 | `artifactory.jfrog.bermos.io` | `Repository` | Namespaced | `/artifactory/api/repositories` | done |
-| `platform.jfrog.bermos.io` | `User` | Namespaced | `/artifactory/api/security/users` | planned |
-| `platform.jfrog.bermos.io` | `Group` | Namespaced | `/artifactory/api/security/groups` | planned |
-| `platform.jfrog.bermos.io` | `PermissionTarget` | Namespaced | `/artifactory/api/v2/security/permissions` | planned |
+| `platform.jfrog.bermos.io` | `User` | Namespaced | `/artifactory/api/security/users` | done |
+| `platform.jfrog.bermos.io` | `Group` | Namespaced | `/artifactory/api/security/groups` | done |
+| `platform.jfrog.bermos.io` | `PermissionTarget` | Namespaced | `/artifactory/api/v2/security/permissions` | done |
 | `xray.jfrog.bermos.io` | `Policy` | Namespaced | `/xray/api/v2/policies` | planned |
 | `xray.jfrog.bermos.io` | `Watch` | Namespaced | `/xray/api/v2/watches` | planned |
 
@@ -98,6 +98,22 @@ and `Delete` against JFrog; the shared reconciler takes care of:
   JFrog. It reports whether the resource exists and whether it matches the
   spec, which is useful for referencing resources managed elsewhere.
 
+### Users, groups and permission targets
+
+- Group membership is managed on the `User` (`spec.groups`), which is how the
+  Artifactory security API models it. When `spec.groups` is set the
+  membership is enforced exactly, including auto-join groups; leave it unset
+  for users whose groups come from LDAP, SAML or auto-join.
+- User passwords come from Secrets and are only sent when they change
+  (detected by hash), so the operator does not reset passwords on every sync.
+- A `PermissionTarget` is replaced as a whole on update. Sections and grants
+  added by hand in Artifactory are drift and get removed. Lists that JFrog
+  returns in no particular order (repositories, actions) are compared sorted.
+- Users, groups and permission targets grant access to the whole platform (a
+  `User` can be an admin), so their RBAC is not aggregated into the namespace
+  `admin` and `edit` roles. The `jfrog-security-editor` ClusterRole has to be
+  bound explicitly.
+
 ### Status
 
 Every managed resource reports:
@@ -158,7 +174,7 @@ found error.
 
 ## Roadmap
 
-1. Connections, generic reconciler and `Repository` (this change).
+1. Connections, generic reconciler and `Repository`.
 2. `User`, `Group` and `PermissionTarget`, with user passwords from Secrets.
 3. Xray `Policy` and `Watch`.
 4. Helm chart, published image and Crossplane examples covering a full team

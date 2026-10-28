@@ -1,0 +1,64 @@
+apiVersion: platform.jfrog.bermos.io/v1alpha1
+kind: Group
+metadata:
+  name: team-a-developers
+  namespace: team-a
+spec:
+  description: Developers of team A
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: team-a-ci
+  namespace: team-a
+type: Opaque
+stringData:
+  password: replace-me
+---
+apiVersion: platform.jfrog.bermos.io/v1alpha1
+kind: User
+metadata:
+  name: team-a-ci
+  namespace: team-a
+spec:
+  email: team-a-ci@example.com
+  passwordSecretRef:
+    name: team-a-ci
+    key: password
+  disableUIAccess: true
+  groups:
+    - team-a-developers
+---
+# A user that only logs in through SSO; group membership is left to the IdP.
+apiVersion: platform.jfrog.bermos.io/v1alpha1
+kind: User
+metadata:
+  name: jane
+  namespace: team-a
+spec:
+  username: jane.doe
+  email: jane.doe@example.com
+  internalPasswordDisabled: true
+---
+apiVersion: platform.jfrog.bermos.io/v1alpha1
+kind: PermissionTarget
+metadata:
+  name: team-a
+  namespace: team-a
+spec:
+  repo:
+    repositories:
+      - team-a-maven-local
+      - team-a-maven-remote
+    includePatterns: ["**"]
+    actions:
+      groups:
+        team-a-developers: [read, write, annotate]
+      users:
+        team-a-ci: [read, write, delete]
+  build:
+    repositories: [artifactory-build-info]
+    includePatterns: ["team-a/**"]
+    actions:
+      groups:
+        team-a-developers: [read]

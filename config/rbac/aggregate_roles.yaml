@@ -27,3 +27,19 @@ rules:
   - apiGroups: ["artifactory.jfrog.bermos.io", "platform.jfrog.bermos.io"]
     resources: ["*"]
     verbs: ["get", "list", "watch"]
+---
+# Users, groups and permission targets grant access to the whole platform
+# (a User can be made an admin), so they are deliberately not aggregated into
+# the namespace admin and edit roles. Bind this role explicitly to the people
+# or tools that administer JFrog access. Crossplane gets it so compositions
+# can manage access.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: jfrog-security-editor
+  labels:
+    rbac.crossplane.io/aggregate-to-crossplane: "true"
+rules:
+  - apiGroups: ["platform.jfrog.bermos.io"]
+    resources: ["users", "groups", "permissiontargets"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]

@@ -56,7 +56,30 @@ rules:
   resources:
   - clusterconnections/status
   - connections/status
+  - groups/status
+  - permissiontargets/status
+  - users/status
   verbs:
   - get
   - patch
+  - update
+- apiGroups:
+  - platform.jfrog.bermos.io
+  resources:
+  - groups
+  - permissiontargets
+  - users
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - platform.jfrog.bermos.io
+  resources:
+  - groups/finalizers
+  - permissiontargets/finalizers
+  - users/finalizers
+  verbs:
   - update
