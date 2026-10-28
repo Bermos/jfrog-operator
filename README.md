@@ -1,7 +1,7 @@
 # jfrog-operator
 
 A Kubernetes operator that manages resources in a self-hosted JFrog Platform:
-Artifactory repositories today, with users, groups, permission targets and
+Artifactory repositories, users, groups and permission targets today, with
 Xray policies and watches next. It is designed to be composed by
 [Crossplane](https://crossplane.io) but works on its own as well.
 

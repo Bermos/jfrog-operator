@@ -4,3 +4,6 @@ resources:
   - bases/platform.jfrog.bermos.io_connections.yaml
   - bases/platform.jfrog.bermos.io_clusterconnections.yaml
   - bases/artifactory.jfrog.bermos.io_repositories.yaml
+  - bases/platform.jfrog.bermos.io_users.yaml
+  - bases/platform.jfrog.bermos.io_groups.yaml
+  - bases/platform.jfrog.bermos.io_permissiontargets.yaml
