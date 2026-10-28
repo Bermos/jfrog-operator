@@ -1,0 +1,71 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: teamrepositories
+spec:
+  compositeTypeRef:
+    apiVersion: platform.example.org/v1alpha1
+    kind: TeamRepositories
+  mode: Pipeline
+  pipeline:
+    - step: render-repositories
+      functionRef:
+        name: function-go-templating
+      input:
+        apiVersion: gotemplating.fn.crossplane.io/v1beta1
+        kind: GoTemplate
+        source: Inline
+        inline:
+          template: |
+            {{- $xr := .observed.composite.resource }}
+            {{- $prefix := printf "%s-%s" $xr.spec.team $xr.spec.packageType }}
+            ---
+            apiVersion: artifactory.jfrog.bermos.io/v1alpha1
+            kind: Repository
+            metadata:
+              name: {{ $prefix }}-local
+              annotations:
+                gotemplating.fn.crossplane.io/composition-resource-name: local
+            spec:
+              rclass: local
+              packageType: {{ $xr.spec.packageType }}
+              description: Artifacts published by {{ $xr.spec.team }}
+              xrayIndex: {{ $xr.spec.xrayIndex }}
+            ---
+            apiVersion: artifactory.jfrog.bermos.io/v1alpha1
+            kind: Repository
+            metadata:
+              name: {{ $prefix }}-remote
+              annotations:
+                gotemplating.fn.crossplane.io/composition-resource-name: remote
+            spec:
+              rclass: remote
+              packageType: {{ $xr.spec.packageType }}
+              url: {{ $xr.spec.upstreamURL }}
+              xrayIndex: {{ $xr.spec.xrayIndex }}
+            ---
+            apiVersion: artifactory.jfrog.bermos.io/v1alpha1
+            kind: Repository
+            metadata:
+              name: {{ $prefix }}
+              annotations:
+                gotemplating.fn.crossplane.io/composition-resource-name: virtual
+            spec:
+              rclass: virtual
+              packageType: {{ $xr.spec.packageType }}
+              repositories:
+                - {{ $prefix }}-local
+                - {{ $prefix }}-remote
+              defaultDeploymentRepo: {{ $prefix }}-local
+            {{- with (index .observed.resources "virtual") }}
+            ---
+            apiVersion: platform.example.org/v1alpha1
+            kind: TeamRepositories
+            status:
+              url: {{ .resource.status.url }}
+            {{- end }}
+    # Marks composed Repositories ready from their Ready condition, so the
+    # TeamRepositories only becomes ready once all three exist in Artifactory.
+    - step: automatically-detect-ready-composed-resources
+      functionRef:
+        name: function-auto-ready

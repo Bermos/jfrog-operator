@@ -1,0 +1,9 @@
+apiVersion: platform.example.org/v1alpha1
+kind: TeamRepositories
+metadata:
+  name: payments-maven
+  namespace: team-payments
+spec:
+  team: payments
+  packageType: maven
+  upstreamURL: https://repo1.maven.org/maven2

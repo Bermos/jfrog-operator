@@ -1,0 +1,44 @@
+# A namespaced composite resource (Crossplane v2) that gives a team the usual
+# trio of repositories for one package type: a local repository for its own
+# artifacts, a remote proxy of a public upstream, and a virtual repository
+# that combines both.
+apiVersion: apiextensions.crossplane.io/v2
+kind: CompositeResourceDefinition
+metadata:
+  name: teamrepositories.platform.example.org
+spec:
+  scope: Namespaced
+  group: platform.example.org
+  names:
+    kind: TeamRepositories
+    plural: teamrepositories
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required: [team, packageType, upstreamURL]
+              properties:
+                team:
+                  type: string
+                  description: Team name, used as prefix of the repository keys.
+                packageType:
+                  type: string
+                  description: Artifactory package type, e.g. maven, npm, pypi.
+                upstreamURL:
+                  type: string
+                  description: Public registry the remote repository proxies.
+                xrayIndex:
+                  type: boolean
+                  default: true
+            status:
+              type: object
+              properties:
+                url:
+                  type: string
+                  description: URL of the virtual repository to resolve from.

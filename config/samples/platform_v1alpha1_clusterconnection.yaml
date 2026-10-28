@@ -1,0 +1,22 @@
+# Credentials for the platform. Create an access token in the JFrog UI
+# (Administration > User Management > Access Tokens) with admin scope.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: jfrog-credentials
+  namespace: jfrog-system
+type: Opaque
+stringData:
+  accessToken: replace-me
+---
+# The default connection every resource uses unless it sets spec.connectionRef.
+apiVersion: platform.jfrog.bermos.io/v1alpha1
+kind: ClusterConnection
+metadata:
+  name: default
+spec:
+  url: https://jfrog.example.com
+  credentials:
+    secretRef:
+      name: jfrog-credentials
+      namespace: jfrog-system

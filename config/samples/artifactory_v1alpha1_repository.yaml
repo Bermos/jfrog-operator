@@ -1,0 +1,62 @@
+apiVersion: artifactory.jfrog.bermos.io/v1alpha1
+kind: Repository
+metadata:
+  name: team-a-maven-local
+  namespace: team-a
+spec:
+  rclass: local
+  packageType: maven
+  description: Releases of team A
+  xrayIndex: true
+  # Anything else the Artifactory repository configuration API accepts.
+  config:
+    handleReleases: true
+    handleSnapshots: false
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: maven-central
+  namespace: team-a
+type: Opaque
+stringData:
+  password: replace-me
+---
+apiVersion: artifactory.jfrog.bermos.io/v1alpha1
+kind: Repository
+metadata:
+  name: team-a-maven-remote
+  namespace: team-a
+spec:
+  rclass: remote
+  packageType: maven
+  url: https://repo1.maven.org/maven2
+  username: reader
+  passwordSecretRef:
+    name: maven-central
+    key: password
+---
+apiVersion: artifactory.jfrog.bermos.io/v1alpha1
+kind: Repository
+metadata:
+  name: team-a-maven
+  namespace: team-a
+spec:
+  rclass: virtual
+  packageType: maven
+  repositories:
+    - team-a-maven-local
+    - team-a-maven-remote
+  defaultDeploymentRepo: team-a-maven-local
+---
+# Report on a repository someone else manages, without ever changing it.
+apiVersion: artifactory.jfrog.bermos.io/v1alpha1
+kind: Repository
+metadata:
+  name: shared-docker
+  namespace: team-a
+spec:
+  key: docker-shared
+  rclass: local
+  packageType: docker
+  managementPolicy: Observe

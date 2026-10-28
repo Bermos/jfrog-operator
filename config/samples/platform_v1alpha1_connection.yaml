@@ -1,0 +1,26 @@
+# A namespaced connection, e.g. for a team that brings its own credentials.
+# Its Secret must live in the same namespace.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: team-a-jfrog
+  namespace: team-a
+type: Opaque
+stringData:
+  username: team-a-bot
+  password: replace-me
+---
+apiVersion: platform.jfrog.bermos.io/v1alpha1
+kind: Connection
+metadata:
+  name: jfrog
+  namespace: team-a
+spec:
+  url: https://jfrog.example.com
+  credentials:
+    secretRef:
+      name: team-a-jfrog
+  tls:
+    caSecretRef:
+      name: internal-ca
+      key: ca.crt

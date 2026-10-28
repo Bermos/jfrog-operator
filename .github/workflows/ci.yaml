@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Lint
+        run: make lint
+
+  verify:
+    name: Verify generated files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: go mod tidy
+        run: go mod tidy && git diff --exit-code -- go.mod go.sum
+      - name: make generate
+        run: make verify-generate
+      - name: Render manifests
+        run: make kustomize && bin/kustomize build config/default > /dev/null && bin/kustomize build config/samples > /dev/null
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Test (unit and envtest integration)
+        run: make test
+      - name: Coverage
+        run: go tool cover -func=cover.out | tail -1
+
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: jfrog-operator:ci
