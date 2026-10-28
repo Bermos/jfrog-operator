@@ -1,0 +1,20 @@
+{{- if .Values.defaultConnection.enabled }}
+apiVersion: platform.jfrog.bermos.io/v1alpha1
+kind: ClusterConnection
+metadata:
+  name: default
+  labels:
+    {{- include "jfrog-operator.labels" . | nindent 4 }}
+spec:
+  url: {{ required "defaultConnection.url is required" .Values.defaultConnection.url | quote }}
+  credentials:
+    secretRef:
+      name: {{ required "defaultConnection.secretName is required" .Values.defaultConnection.secretName }}
+      namespace: {{ .Release.Namespace }}
+  {{- with .Values.defaultConnection.caSecretName }}
+  tls:
+    caSecretRef:
+      name: {{ . }}
+      namespace: {{ $.Release.Namespace }}
+  {{- end }}
+{{- end }}

@@ -1,0 +1,58 @@
+image:
+  repository: ghcr.io/bermos/jfrog-operator
+  # Defaults to the chart's appVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+# More than one replica requires leader election, which is always on.
+replicaCount: 1
+
+# How often in-sync resources are compared against JFrog to correct drift.
+syncInterval: 10m
+# How often connections are checked.
+connectionCheckInterval: 5m
+# Timeout of each request to JFrog.
+httpTimeout: 30s
+# Log level: debug, info or error.
+logLevel: info
+
+rbac:
+  # Create the aggregated jfrog-editor, jfrog-viewer and jfrog-security-editor
+  # ClusterRoles. jfrog-editor aggregates into the namespace admin and edit
+  # roles; jfrog-security-editor has to be bound explicitly. Both aggregate
+  # into Crossplane's role.
+  aggregateRoles: true
+
+serviceAccount:
+  # Name of the service account. Defaults to the release's full name.
+  name: ""
+  annotations: {}
+
+# An optional default ClusterConnection, created with the release.
+defaultConnection:
+  enabled: false
+  url: https://jfrog.example.com
+  # Name of an existing Secret in the release namespace with accessToken, or
+  # username and password.
+  secretName: jfrog-credentials
+  # Name of an optional Secret in the release namespace with a ca.crt to trust.
+  caSecretName: ""
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 64Mi
+  limits:
+    memory: 256Mi
+
+podAnnotations: {}
+podLabels: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+metrics:
+  # Expose Prometheus metrics on this port. 0 disables metrics.
+  port: 8080

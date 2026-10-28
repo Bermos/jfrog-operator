@@ -1,0 +1,87 @@
+apiVersion: artifactory.jfrog.bermos.io/v1alpha1
+kind: Repository
+metadata:
+  name: e2e-local
+spec:
+  rclass: local
+  packageType: maven
+---
+apiVersion: artifactory.jfrog.bermos.io/v1alpha1
+kind: Repository
+metadata:
+  name: e2e-remote
+spec:
+  rclass: remote
+  packageType: maven
+  url: https://repo1.maven.org/maven2
+---
+apiVersion: artifactory.jfrog.bermos.io/v1alpha1
+kind: Repository
+metadata:
+  name: e2e-virtual
+spec:
+  rclass: virtual
+  packageType: maven
+  repositories: [e2e-local, e2e-remote]
+---
+apiVersion: platform.jfrog.bermos.io/v1alpha1
+kind: Group
+metadata:
+  name: e2e-developers
+spec:
+  description: e2e
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: e2e-user
+stringData:
+  password: Passw0rd!
+---
+apiVersion: platform.jfrog.bermos.io/v1alpha1
+kind: User
+metadata:
+  name: e2e-user
+spec:
+  email: e2e@example.com
+  passwordSecretRef:
+    name: e2e-user
+    key: password
+  groups: [e2e-developers]
+---
+apiVersion: platform.jfrog.bermos.io/v1alpha1
+kind: PermissionTarget
+metadata:
+  name: e2e
+spec:
+  repo:
+    repositories: [e2e-local, e2e-remote]
+    actions:
+      groups:
+        e2e-developers: [read, write]
+---
+apiVersion: xray.jfrog.bermos.io/v1alpha1
+kind: Policy
+metadata:
+  name: e2e-security
+spec:
+  type: security
+  rules:
+    - name: critical
+      priority: 1
+      criteria:
+        min_severity: critical
+      actions:
+        fail_build: true
+---
+apiVersion: xray.jfrog.bermos.io/v1alpha1
+kind: Watch
+metadata:
+  name: e2e
+spec:
+  resources:
+    - type: repository
+      name: e2e-local
+  assignedPolicies:
+    - name: e2e-security
+      type: security

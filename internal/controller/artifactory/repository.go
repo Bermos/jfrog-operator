@@ -142,7 +142,8 @@ func desiredRepository(ctx context.Context, kube client.Client, obj *artifactory
 	case artifactoryv1alpha1.RClassRemote:
 		setString("url", spec.URL)
 		setString("username", spec.Username)
-		if ref := spec.PasswordSecretRef; ref != nil {
+		// Deleting needs only the key, and the Secret may already be gone.
+		if ref := spec.PasswordSecretRef; ref != nil && obj.GetDeletionTimestamp() == nil {
 			var secret corev1.Secret
 			if err := kube.Get(ctx, types.NamespacedName{Namespace: obj.Namespace, Name: ref.Name}, &secret); err != nil {
 				return nil, "", fmt.Errorf("getting password Secret %s: %w", ref.Name, err)

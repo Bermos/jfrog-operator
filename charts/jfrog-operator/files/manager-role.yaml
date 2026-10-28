@@ -1,0 +1,112 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  - events.k8s.io
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - artifactory.jfrog.bermos.io
+  resources:
+  - repositories
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - artifactory.jfrog.bermos.io
+  resources:
+  - repositories/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - artifactory.jfrog.bermos.io
+  resources:
+  - repositories/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - platform.jfrog.bermos.io
+  resources:
+  - clusterconnections
+  - connections
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - platform.jfrog.bermos.io
+  resources:
+  - clusterconnections/status
+  - connections/status
+  - groups/status
+  - permissiontargets/status
+  - users/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - platform.jfrog.bermos.io
+  resources:
+  - groups
+  - permissiontargets
+  - users
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - platform.jfrog.bermos.io
+  resources:
+  - groups/finalizers
+  - permissiontargets/finalizers
+  - users/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - xray.jfrog.bermos.io
+  resources:
+  - policies
+  - watches
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - xray.jfrog.bermos.io
+  resources:
+  - policies/finalizers
+  - watches/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - xray.jfrog.bermos.io
+  resources:
+  - policies/status
+  - watches/status
+  verbs:
+  - get
+  - patch
+  - update

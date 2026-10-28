@@ -42,7 +42,9 @@ func ConnectUser(ctx context.Context, kube client.Client, jc *jfrog.Client, obj 
 		InternalPasswordDisabled: spec.InternalPasswordDisabled,
 		Groups:                   sorted(spec.Groups),
 	}
-	if ref := spec.PasswordSecretRef; ref != nil {
+	// Deleting needs only the name, and the Secret may already be gone, e.g.
+	// when the whole namespace is deleted.
+	if ref := spec.PasswordSecretRef; ref != nil && obj.GetDeletionTimestamp() == nil {
 		var secret corev1.Secret
 		if err := kube.Get(ctx, types.NamespacedName{Namespace: obj.Namespace, Name: ref.Name}, &secret); err != nil {
 			return nil, fmt.Errorf("getting password Secret %s: %w", ref.Name, err)

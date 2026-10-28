@@ -351,6 +351,14 @@ func TestRemoteRepositoryWithPassword(t *testing.T) {
 		}
 		return nil
 	})
+
+	// Deleting works after the Secret is gone, as when the namespace is deleted.
+	deleteObj(t, &secret)
+	deleteObj(t, repo)
+	waitGone(t, repo)
+	if jfrogs.Repository(repo.Spec.Key) != nil {
+		t.Fatal("repository not deleted")
+	}
 }
 
 func TestRemoteRepositoryMissingSecret(t *testing.T) {
