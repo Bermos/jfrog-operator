@@ -1,17 +1,20 @@
-# A namespaced composite resource (Crossplane v2) that gives a team the usual
-# trio of repositories for one package type: a local repository for its own
-# artifacts, a remote proxy of a public upstream, and a virtual repository
-# that combines both.
+# A namespaced composite resource (Crossplane v2) that onboards a team for one
+# package type:
+#   - a local repository for the team's own artifacts,
+#   - a remote repository proxying a public registry,
+#   - a virtual repository combining both,
+#   - a group and a permission target granting it access,
+#   - an Xray watch applying existing policies to the team's artifacts.
 apiVersion: apiextensions.crossplane.io/v2
 kind: CompositeResourceDefinition
 metadata:
-  name: teamrepositories.platform.example.org
+  name: teams.platform.example.org
 spec:
   scope: Namespaced
   group: platform.example.org
   names:
-    kind: TeamRepositories
-    plural: teamrepositories
+    kind: Team
+    plural: teams
   versions:
     - name: v1alpha1
       served: true
@@ -26,19 +29,29 @@ spec:
               properties:
                 team:
                   type: string
-                  description: Team name, used as prefix of the repository keys.
+                  description: Team name, used as prefix of everything created in JFrog.
+                  pattern: "^[a-z0-9][a-z0-9-]*$"
                 packageType:
                   type: string
                   description: Artifactory package type, e.g. maven, npm, pypi.
                 upstreamURL:
                   type: string
                   description: Public registry the remote repository proxies.
-                xrayIndex:
-                  type: boolean
-                  default: true
+                xrayPolicies:
+                  type: array
+                  description: Existing Xray policies to apply to the team's artifacts.
+                  items:
+                    type: object
+                    required: [name, type]
+                    properties:
+                      name:
+                        type: string
+                      type:
+                        type: string
+                        enum: [security, license, operational_risk]
             status:
               type: object
               properties:
                 url:
                   type: string
-                  description: URL of the virtual repository to resolve from.
+                  description: URL of the virtual repository to resolve from and deploy to.

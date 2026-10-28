@@ -55,6 +55,29 @@ func TestDiff(t *testing.T) {
 			name:     "list order matters",
 			desired:  map[string]any{"l": []string{"a", "b"}},
 			observed: map[string]any{"l": []any{"b", "a"}},
+			want:     []string{"l[0]", "l[1]"},
+		},
+		{
+			name:     "list length differs",
+			desired:  map[string]any{"l": []string{"a"}},
+			observed: map[string]any{"l": []any{"a", "b"}},
+			want:     []string{"l"},
+		},
+		{
+			name:     "list elements may carry extra fields",
+			desired:  map[string]any{"l": []any{map[string]any{"name": "x"}}},
+			observed: map[string]any{"l": []any{map[string]any{"name": "x", "added": true}}},
+		},
+		{
+			name:     "list element differs",
+			desired:  map[string]any{"l": []any{map[string]any{"name": "x"}, map[string]any{"name": "y"}}},
+			observed: map[string]any{"l": []any{map[string]any{"name": "x"}, map[string]any{"name": "z"}}},
+			want:     []string{"l[1].name"},
+		},
+		{
+			name:     "list against scalar",
+			desired:  map[string]any{"l": []string{"a"}},
+			observed: map[string]any{"l": "a"},
 			want:     []string{"l"},
 		},
 		{

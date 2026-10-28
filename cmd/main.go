@@ -17,6 +17,7 @@ import (
 
 	artifactoryv1alpha1 "github.com/Bermos/jfrog-operator/api/artifactory/v1alpha1"
 	platformv1alpha1 "github.com/Bermos/jfrog-operator/api/platform/v1alpha1"
+	xrayv1alpha1 "github.com/Bermos/jfrog-operator/api/xray/v1alpha1"
 	"github.com/Bermos/jfrog-operator/internal/controller"
 	"github.com/Bermos/jfrog-operator/internal/controller/platform"
 	"github.com/Bermos/jfrog-operator/internal/reconciler"
@@ -28,6 +29,7 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(platformv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(artifactoryv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(xrayv1alpha1.AddToScheme(scheme))
 }
 
 func main() {

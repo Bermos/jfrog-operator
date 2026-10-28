@@ -7,3 +7,5 @@ resources:
   - bases/platform.jfrog.bermos.io_users.yaml
   - bases/platform.jfrog.bermos.io_groups.yaml
   - bases/platform.jfrog.bermos.io_permissiontargets.yaml
+  - bases/xray.jfrog.bermos.io_policies.yaml
+  - bases/xray.jfrog.bermos.io_watches.yaml

@@ -23,6 +23,7 @@ import (
 	artifactoryv1alpha1 "github.com/Bermos/jfrog-operator/api/artifactory/v1alpha1"
 	commonv1alpha1 "github.com/Bermos/jfrog-operator/api/common/v1alpha1"
 	platformv1alpha1 "github.com/Bermos/jfrog-operator/api/platform/v1alpha1"
+	xrayv1alpha1 "github.com/Bermos/jfrog-operator/api/xray/v1alpha1"
 	"github.com/Bermos/jfrog-operator/internal/controller"
 	"github.com/Bermos/jfrog-operator/internal/jfrog/fake"
 )
@@ -66,7 +67,7 @@ func run(m *testing.M) int {
 
 	scheme := runtime.NewScheme()
 	for _, add := range []func(*runtime.Scheme) error{
-		clientgoscheme.AddToScheme, platformv1alpha1.AddToScheme, artifactoryv1alpha1.AddToScheme,
+		clientgoscheme.AddToScheme, platformv1alpha1.AddToScheme, artifactoryv1alpha1.AddToScheme, xrayv1alpha1.AddToScheme,
 	} {
 		if err := add(scheme); err != nil {
 			fmt.Fprintln(os.Stderr, err)

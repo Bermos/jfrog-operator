@@ -53,6 +53,7 @@ func NewServer() *Server {
 	mux.HandleFunc("POST /artifactory/api/repositories/{key}", s.updateRepository)
 	mux.HandleFunc("DELETE /artifactory/api/repositories/{key}", s.deleteRepository)
 	s.registerSecurity(mux)
+	s.registerXray(mux)
 	s.Server = httptest.NewServer(s.middleware(mux))
 	return s
 }

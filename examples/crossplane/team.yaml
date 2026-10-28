@@ -1,5 +1,5 @@
 apiVersion: platform.example.org/v1alpha1
-kind: TeamRepositories
+kind: Team
 metadata:
   name: payments-maven
   namespace: team-payments
@@ -7,3 +7,8 @@ spec:
   team: payments
   packageType: maven
   upstreamURL: https://repo1.maven.org/maven2
+  xrayPolicies:
+    - name: block-critical
+      type: security
+    - name: no-gpl
+      type: license
